@@ -1,42 +1,86 @@
-# AI-Powered Resume Job Match & Skill Gap Predictor
+<div align="center">
 
-An end-to-end NLP + Machine Learning project that:
+# 🧠 ResumeFit AI
+### AI-Powered Resume Job Match & Skill Gap Predictor
 
-1. **Predicts a resume's job category** using TF-IDF + Logistic Regression, trained on the Kaggle Resume Dataset.
-2. **Scores how well a resume matches a job description** using TF-IDF + cosine similarity.
-3. **Performs a skill gap analysis**, showing matching and missing technical skills.
-4. Presents everything in a polished, interactive **Streamlit dashboard**.
+**Instantly see how well a resume matches a job — with a fit score, predicted job category, and a full skill gap breakdown.**
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://salma-resumefit-ai.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![NLP](https://img.shields.io/badge/NLP-TF--IDF-8A2BE2?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-2E8B57?style=for-the-badge)
+
+**🔗 Try it live: [salma-resumefit-ai.streamlit.app](https://salma-resumefit-ai.streamlit.app/)**
+
+</div>
 
 ---
 
-## Project Structure
+## 📌 Overview
+
+**ResumeFit AI** is an end-to-end NLP + Machine Learning project that helps candidates understand how well their resume aligns with a specific job description — the same way an Applicant Tracking System (ATS) would screen it — while keeping every calculation transparent and explainable.
+
+It combines three components into one Streamlit dashboard:
+
+| Component | What it does | Technique |
+|---|---|---|
+| 🏷️ **Job Category Prediction** | Classifies a resume into a job category (e.g. Data Scientist, HR, Sales) | TF-IDF + Logistic Regression, trained on the Kaggle Resume Dataset |
+| 🎯 **Resume–JD Match Score** | Scores how well a resume matches a specific job description | TF-IDF + Cosine Similarity, blended with skill-keyword coverage |
+| 🧩 **Skill Gap Analysis** | Shows exactly which required skills are present vs. missing | Keyword-based extraction across a 280+ skill dictionary spanning tech, business, HR, finance, healthcare, and more |
+
+---
+
+## ✨ Features
+
+- 📄 Upload a resume as a **PDF** — text is extracted automatically
+- 📝 Paste any **job description** to compare against
+- 📊 A single **Match Score** blending keyword overlap and text similarity, scaled to feel like real ATS tools
+- 🏷️ **Predicted job category** with confidence, powered by a trained classifier
+- ✅ **Matching skills** and ⚠️ **missing skills**, shown as clear visual chips
+- 📈 Progress bars for skill coverage and text similarity
+- 🎨 A clean, card-based dashboard — no clutter, no tutorial-style walls of text
+
+---
+
+## 🖥️ Live Demo
+
+**👉 [salma-resumefit-ai.streamlit.app](https://salma-resumefit-ai.streamlit.app/)**
+
+Upload a resume PDF, paste a job description, and hit **Analyze** to see it in action.
+
+---
+
+## 🗂️ Project Structure
 
 ```
 Resume_Job_Match_Predictor/
-├── app.py                      # Streamlit dashboard
-├── requirements.txt
-├── README.md
+├── app.py                      # Streamlit dashboard (entry point)
+├── requirements.txt            # Python dependencies
+├── README.md                   # You are here
+├── INTERVIEW_PREP.md           # Full technical explanation + interview Q&A
 ├── .gitignore
 ├── data/
 │   └── README.md               # Instructions to obtain Resume.csv (not included)
 ├── models/
-│   └── README.md               # Trained artifacts saved here after training
+│   └── README.md                # Trained artifacts land here after training
 ├── notebooks/
 │   └── model_training.ipynb    # Full training + evaluation walkthrough
 └── src/
     ├── __init__.py
     ├── preprocessing.py         # Text cleaning utilities
     ├── pdf_extractor.py         # PDF resume text extraction (pypdf)
-    ├── skill_extractor.py       # Skills dictionary + extraction logic
-    ├── matcher.py                # TF-IDF + cosine similarity matching
+    ├── skill_extractor.py       # 280+ skill dictionary + extraction logic
+    ├── matcher.py                # TF-IDF + cosine similarity + score curve
     └── predictor.py              # Training pipeline + inference (job category)
 ```
 
 ---
 
-## 1. Setup
+## ⚙️ Setup
 
-### 1.1 Clone the repository and create a virtual environment
+### 1️⃣ Clone & create a virtual environment
 
 ```bash
 git clone <your-repo-url>
@@ -45,19 +89,19 @@ python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 ```
 
-### 1.2 Install dependencies
+### 2️⃣ Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 1.3 Download the dataset
+### 3️⃣ Download the dataset
 
-This repository does **not** include `Resume.csv`. Download it from Kaggle:
+This repo does **not** include `Resume.csv`. Download it from Kaggle:
 
-https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset
+🔗 https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset
 
-Place the file at:
+Place it at:
 
 ```
 data/Resume.csv
@@ -67,134 +111,112 @@ Required columns: `ID`, `Resume_str`, `Resume_html`, `Category`.
 
 ---
 
-## 2. Train the Model
+## 🏋️ Train the Model
 
-You must train the model once before running the app (trained artifacts are not
-committed to the repo — see `models/README.md`).
+Trained model artifacts are **not committed to git** (see `.gitignore`) — you train once, locally.
 
-### Option A — Command line (recommended, fastest)
+### Option A — Command line (fastest)
 
 ```bash
 python -m src.predictor --train
 ```
 
-This will:
-- Load and clean `data/Resume.csv`
-- Split into train/test sets
-- Fit a TF-IDF vectorizer
-- Train a Logistic Regression classifier
-- Print accuracy, precision, recall, and F1-score
-- Save `job_category_model.pkl`, `tfidf_vectorizer.pkl`, `label_encoder.pkl`, and `metrics.json` into `models/`
+This loads and cleans `data/Resume.csv`, splits into train/test, fits a TF-IDF vectorizer, trains a Logistic Regression classifier, prints accuracy/precision/recall/F1, and saves everything to `models/`.
 
-### Option B — Jupyter Notebook (with visualizations)
+### Option B — Jupyter Notebook (with visuals)
 
 ```bash
 jupyter notebook notebooks/model_training.ipynb
 ```
 
-Run all cells to see dataset exploration, cleaning previews, the classification
-report as a table, and a confusion matrix heatmap, in addition to saving the
-same artifacts to `models/`.
+Includes dataset exploration, a cleaning preview, the classification report as a table, and a confusion matrix heatmap.
+
+> ⚠️ **If deploying** (e.g. to Streamlit Community Cloud), the platform never runs training for you — you must train locally and **force-add** the model files past `.gitignore`:
+> ```bash
+> git add -f models/job_category_model.pkl models/tfidf_vectorizer.pkl models/label_encoder.pkl models/metrics.json
+> git commit -m "Add trained model artifacts for deployment"
+> git push
+> ```
 
 ---
 
-## 3. Run the Streamlit App
-
-Once the model is trained (artifacts exist in `models/`):
+## ▶️ Run the App
 
 ```bash
 streamlit run app.py
 ```
 
-Then open the local URL Streamlit prints (typically `http://localhost:8501`).
-
-### Using the app
-1. Upload a resume as a **PDF**.
-2. Paste the target **job description** into the text area.
-3. Click **Analyze**.
-4. Review the Resume Match Score, Predicted Job Category, Matching/Missing
-   Skills, Skill Match percentage, and the resume analysis summary.
+Open the local URL Streamlit prints (typically `http://localhost:8501`), or use the [live demo](https://salma-resumefit-ai.streamlit.app/).
 
 ---
 
-## 4. ML / NLP Methodology
+## 🔬 ML / NLP Methodology
 
-### 4.1 Job Category Prediction
-- **Input:** `Resume_str` column from `Resume.csv`.
-- **Cleaning:** lowercasing, URL/email removal, punctuation & digit removal,
-  whitespace normalization, and stopword removal (`src/preprocessing.py`).
-- **Vectorization:** `TfidfVectorizer` (unigrams + bigrams, capped vocabulary
-  of 5,000 features) fit on the training split only, to avoid data leakage.
-- **Model:** `LogisticRegression` (multinomial, `max_iter=1000`), trained on
-  the TF-IDF features.
-- **Evaluation:** accuracy, weighted precision, weighted recall, weighted
-  F1-score, full per-class classification report, and a confusion matrix —
-  all computed on a held-out test split (default 80/20, stratified by class).
-- **Persistence:** the fitted vectorizer, model, and label encoder are saved
-  with `joblib` so inference in the Streamlit app uses the exact training-time
-  vocabulary and class mapping.
+### 🏷️ Job Category Prediction
+- **Input:** `Resume_str` column from `Resume.csv`
+- **Cleaning:** lowercasing, URL/email removal, punctuation & digit stripping, whitespace normalization, stopword removal (`src/preprocessing.py`)
+- **Vectorization:** `TfidfVectorizer` (unigrams + bigrams, 5,000-feature vocabulary), fit on the training split only — avoids data leakage
+- **Model:** `LogisticRegression` (multinomial, `max_iter=1000`)
+- **Evaluation:** accuracy, weighted precision/recall/F1, full per-class classification report, and a confusion matrix — all on a stratified 80/20 held-out test split
+- **Persistence:** vectorizer, model, and label encoder saved with `joblib`
 
-### 4.2 Resume–Job Description Matching
-- Text is extracted from the uploaded PDF using `pypdf`.
-- Both the resume text and job description are cleaned with the same
-  preprocessing pipeline.
-- A **fresh** `TfidfVectorizer` is fit at query time on just these two
-  documents, and **cosine similarity** between their TF-IDF vectors produces
-  the Resume Match Score (0–100%).
+### 🎯 Resume–JD Matching
+Two signals are combined:
+1. **Text similarity** — a fresh TF-IDF vectorizer fit on just the resume + JD pair, compared with cosine similarity
+2. **Skill coverage** — % of the JD's detected required skills that also appear in the resume
 
-### 4.3 Skill Gap Analysis
-- A curated technical-skills dictionary (`src/skill_extractor.py`), organized
-  by domain (programming languages, web dev, data science/ML, data
-  engineering, databases, cloud/DevOps, BI tools, project/soft skills).
-- Skills are extracted from both texts using word-boundary-safe, case-insensitive
-  regex matching (supports multi-word skills like "machine learning" and
-  symbol-containing skills like "c++" / "node.js").
-- The app reports **matching skills**, **missing skills** (present in the JD
-  but absent from the resume), and a **skill match percentage**
-  (`matching / required-by-JD`).
+```
+raw_score  = 0.4 × text_similarity + 0.6 × skill_coverage
+final_score = 100 × (raw_score / 100) ^ 0.6      # display curve
+```
+
+The curve mirrors how commercial ATS-style tools present scores — raw lexical overlap between two documents is mathematically almost never near 100%, so the result is rescaled into a friendlier, still fully transparent range.
+
+### 🧩 Skill Gap Analysis
+- A curated **280+ skill dictionary** (`src/skill_extractor.py`) spanning programming, data science, cloud/DevOps, business, finance, marketing, HR, legal, healthcare, education, hospitality, manufacturing, admin, and soft skills
+- Word-boundary-safe, case-insensitive regex matching — correctly handles multi-word skills ("machine learning") and symbol-containing tools ("c++", "node.js")
+- Reports **matching skills**, **missing skills**, and a **skill match percentage**
 
 ---
 
-## 5. Limitations
+## ⚠️ Limitations
 
-- **The Resume Match Score is a text-similarity score, not a hiring
-  probability.** It reflects vocabulary and content overlap between the
-  resume and job description as measured by TF-IDF + cosine similarity. It
-  does **not** account for years of experience, seniority, soft skills,
-  interview performance, cultural fit, or anything not captured in the
-  literal wording of both documents.
-- Skill extraction is **keyword-based**. It will miss skills phrased in
-  unusual ways, synonyms not in the dictionary, or skills implied but not
-  explicitly named.
-- Job category prediction quality depends entirely on the diversity and
-  balance of categories in the training dataset (`Resume.csv`). Categories
-  with very few training examples will predict less reliably.
-- PDF extraction quality depends on how the PDF was generated; scanned
-  image-based PDFs with no embedded text layer will not extract any text.
+- The Match Score is a **text-similarity metric**, not a hiring probability — it doesn't capture experience depth, seniority, soft skills, or interview performance
+- Skill extraction is **keyword-based** — unusual phrasing or unlisted synonyms won't be detected
+- Category prediction quality depends on how balanced `Resume.csv`'s categories are
+- Scanned/image-only PDFs with no text layer won't extract any text
 
 ---
 
-## 6. Future Enhancements
+## 🚀 Future Enhancements
 
-- Replace/augment TF-IDF matching with **Sentence Transformers** (e.g.
-  `all-MiniLM-L6-v2` from `sentence-transformers`) to capture **semantic
-  similarity** rather than pure lexical overlap, improving matches when a
-  resume and JD describe the same skill with different wording.
-- Expand the skills dictionary using a maintained taxonomy (e.g. ESCO or
-  O*NET) and support fuzzy/synonym matching.
-- Add resume section parsing (Experience, Education, Skills) for more
-  targeted analysis instead of treating the resume as one block of text.
-- Support DOCX resume uploads in addition to PDF.
-- Add a feedback loop where recruiters can correct predicted categories to
-  continuously improve the classifier.
+- **Semantic similarity** via Sentence Transformers (e.g. `all-MiniLM-L6-v2`) instead of pure lexical TF-IDF overlap
+- Expand the skills dictionary with a maintained taxonomy (ESCO / O*NET) + fuzzy/synonym matching
+- Resume section parsing (Experience, Education, Skills) for more targeted analysis
+- DOCX resume upload support
+- Recruiter feedback loop to continuously retrain the classifier
 
 ---
 
-## 7. Quick Command Reference
+## 📋 Quick Command Reference
 
-| Task                          | Command                                  |
-|--------------------------------|-------------------------------------------|
-| Install dependencies           | `pip install -r requirements.txt`         |
-| Train the model                | `python -m src.predictor --train`         |
-| Train via notebook             | `jupyter notebook notebooks/model_training.ipynb` |
-| Run the app                    | `streamlit run app.py`                    |
+| Task | Command |
+|---|---|
+| Install dependencies | `pip install -r requirements.txt` |
+| Train the model | `python -m src.predictor --train` |
+| Train via notebook | `jupyter notebook notebooks/model_training.ipynb` |
+| Run the app | `streamlit run app.py` |
+
+---
+
+## 📚 Learn More
+
+See **[INTERVIEW_PREP.md](INTERVIEW_PREP.md)** for a full technical walkthrough of this project, including how every module works and commonly asked interview questions with model answers.
+
+---
+
+<div align="center">
+
+Built with 🐍 Python · 🔬 scikit-learn · 🎈 Streamlit
+
+</div>
