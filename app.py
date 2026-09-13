@@ -26,7 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.matcher import match_summary
+from src.matcher import compute_text_similarity, match_summary
 from src.pdf_extractor import extract_text_from_pdf
 from src.predictor import artifacts_exist, load_metrics, predict_category
 from src.skill_extractor import compare_skills
@@ -179,9 +179,11 @@ with st.sidebar:
 
     with st.expander("How scoring works"):
         st.caption(
-            "The match score compares resume and job description text using "
-            "TF-IDF and cosine similarity. It reflects content overlap, not a "
-            "guarantee of being hired — experience, soft skills, and interview "
+            "The Match Score blends two signals: how many of the job's "
+            "required skills appear in the resume (weighted highest), and "
+            "overall TF-IDF text similarity between the two documents. "
+            "It reflects content and keyword overlap, not a guarantee of "
+            "being hired — experience level, soft skills, and interview "
             "performance aren't captured."
         )
 
@@ -219,7 +221,10 @@ with col_right:
 analyze_clicked = st.button("Analyze Match", type="primary", use_container_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
+if not artifacts_exist():
+    st.info("Job category prediction is unavailable until the model is trained. See README for setup.", icon="ℹ️")
 
+# --------------------------------------------------------------------------
 # Analysis section
 # --------------------------------------------------------------------------
 if analyze_clicked:
@@ -229,6 +234,7 @@ if analyze_clicked:
         st.error("Please paste a job description before analyzing.")
     else:
         score, label = match_summary(resume_text, jd_text)
+        text_score = compute_text_similarity(resume_text, jd_text)
         prediction = predict_category(resume_text)
         skills_result = compare_skills(resume_text, jd_text)
 
@@ -243,8 +249,8 @@ if analyze_clicked:
         metric_cols[3].metric("Skills Detected", len(skills_result["resume_skills"]))
 
         st.write("")
-        st.progress(min(int(score), 100), text=f"Resume ↔ Job Description similarity — {score:.0f}%")
         st.progress(min(int(skills_result["match_percentage"]), 100), text=f"Required skills covered — {skills_result['match_percentage']:.0f}%")
+        st.progress(min(int(text_score), 100), text=f"Overall text similarity — {text_score:.0f}%")
 
         if prediction and len(prediction["top_predictions"]) > 1:
             with st.expander("Other likely role matches"):
