@@ -19,9 +19,13 @@ Two signals are combined into the final "Resume Match Score":
                        since they focus on keyword/skill matching rather
                        than whole-document similarity.
 
-The final score is a weighted blend of the two, which produces numbers in
-a range closer to what people expect from resume-matching tools while
-remaining fully explainable (no hidden inflation).
+The raw blend of these two signals is then passed through a display curve
+(see `apply_score_curve`) before being shown to the user. Most commercial
+ATS-style checkers apply a similar curve internally — raw lexical/keyword
+overlap between two documents is mathematically almost never close to
+100%, so tools that show "78% match" are not measuring pure overlap, they
+are rescaling it into a friendlier range. We do the same thing here, but
+document it openly rather than hiding it.
 
 This is still a similarity score, not a probability of getting hired.
 """
@@ -38,6 +42,39 @@ from src.skill_extractor import compare_skills
 # computing the final blended match score.
 SKILL_WEIGHT = 0.6
 TEXT_WEIGHT = 0.4
+
+# Exponent used to curve the final displayed score upward (0 < x < 1).
+# A raw blended score is passed through score^CURVE_EXPONENT (after
+# normalizing to 0-1), which lifts low/mid scores more than high scores
+# while still mapping 0 -> 0 and 100 -> 100. Lower exponent = more generous.
+CURVE_EXPONENT = 0.6
+
+
+def apply_score_curve(raw_score: float, exponent: float = CURVE_EXPONENT) -> float:
+    """
+    Rescale a raw 0-100 similarity score into a more generous display score.
+
+    Uses a power curve: displayed = 100 * (raw / 100) ** exponent
+
+    This preserves 0% -> 0% and 100% -> 100%, but lifts everything in
+    between (e.g. a raw 45% becomes ~62%, a raw 69% becomes ~80%), which
+    mirrors how most commercial resume-matching tools present scores.
+
+    Args:
+        raw_score: The raw blended score (0-100).
+        exponent: Curve strength; lower = more generous. Must be in (0, 1].
+
+    Returns:
+        Curved score (0-100), rounded to 2 decimals.
+    """
+    if raw_score <= 0:
+        return 0.0
+    if raw_score >= 100:
+        return 100.0
+
+    normalized = raw_score / 100.0
+    curved = normalized ** exponent
+    return round(curved * 100, 2)
 
 
 def compute_text_similarity(resume_text: str, jd_text: str) -> float:
@@ -70,13 +107,15 @@ def compute_text_similarity(resume_text: str, jd_text: str) -> float:
 
 def compute_match_score(resume_text: str, jd_text: str) -> float:
     """
-    Compute the blended Resume Match Score.
+    Compute the final (curved) Resume Match Score shown to the user.
 
-    score = TEXT_WEIGHT * text_similarity + SKILL_WEIGHT * skill_coverage
-
-    If the job description has no recognizable skills at all (so skill
-    coverage can't be computed), the score falls back to pure text
-    similarity so the result is never artificially zeroed out.
+    Steps:
+        1. Blend text similarity and skill coverage:
+           raw = TEXT_WEIGHT * text_similarity + SKILL_WEIGHT * skill_coverage
+           (falls back to pure text similarity if the JD has no
+           recognizable skill keywords at all)
+        2. Apply a display curve (see `apply_score_curve`) so the result
+           reads in a range comparable to typical ATS-style tools.
 
     Args:
         resume_text: Raw resume text.
@@ -89,11 +128,11 @@ def compute_match_score(resume_text: str, jd_text: str) -> float:
     skills = compare_skills(resume_text, jd_text)
 
     if skills["jd_skills"]:
-        blended = (TEXT_WEIGHT * text_score) + (SKILL_WEIGHT * skills["match_percentage"])
+        raw = (TEXT_WEIGHT * text_score) + (SKILL_WEIGHT * skills["match_percentage"])
     else:
-        blended = text_score
+        raw = text_score
 
-    return round(blended, 2)
+    return apply_score_curve(raw)
 
 
 def match_summary(resume_text: str, jd_text: str) -> Tuple[float, str]:
@@ -109,11 +148,11 @@ def match_summary(resume_text: str, jd_text: str) -> Tuple[float, str]:
     """
     score = compute_match_score(resume_text, jd_text)
 
-    if score >= 75:
+    if score >= 85:
         label = "Strong Match"
-    elif score >= 50:
+    elif score >= 70:
         label = "Good Match"
-    elif score >= 30:
+    elif score >= 50:
         label = "Moderate Match"
     else:
         label = "Weak Match"
