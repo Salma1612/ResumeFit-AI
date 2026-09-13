@@ -219,10 +219,7 @@ with col_right:
 analyze_clicked = st.button("Analyze Match", type="primary", use_container_width=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-if not artifacts_exist():
-    st.info("Job category prediction is unavailable until the model is trained. See README for setup.", icon="ℹ️")
 
-# --------------------------------------------------------------------------
 # Analysis section
 # --------------------------------------------------------------------------
 if analyze_clicked:
